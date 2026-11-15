@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 # Start VL53L9CX capture + LiDAR Web Studio (port 8080) at boot.
 # Installed by scripts/install_root.sh as /etc/systemd/system/vl53l9cx-web.service
 #   sudo systemctl disable --now vl53l9cx-web   # stop auto-start (and stop now)

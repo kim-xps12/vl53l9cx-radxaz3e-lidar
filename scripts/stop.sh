@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: MIT
 # Stop the processes started by scripts/run_web.sh (only those, by PID file).
 RUN=/tmp/vl53l9cx
 for name in v4l2 web; do

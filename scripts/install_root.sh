@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: MIT
 # One-time root setup on the Radxa ZERO 3E (run AFTER `make all` as the normal user):
 #     sudo ./scripts/install_root.sh
 # then reboot.

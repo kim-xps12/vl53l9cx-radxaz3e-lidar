@@ -1,0 +1,31 @@
+MIT License
+
+Copyright (c) 2026 Yutaro KIMURA
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---------------------------------------------------------------------------
+This license covers the files of this repository that carry no other
+license notice. It does NOT cover:
+  - upstream/ (except upstream/UPSTREAM_COMMIT): code by jonferran, MIT,
+    see upstream/LICENSE;
+  - upstream/vendor/st-uld/: STMicroelectronics ULD under SLA0111 (not an
+    open-source license), see upstream/vendor/st-uld/LICENSE.txt;
+  - radxa/driver/: GPL-2.0 (Linux kernel module), see the SPDX line in each file;
+  - radxa/dts/: GPL-2.0+ OR MIT, see the SPDX line in the file.

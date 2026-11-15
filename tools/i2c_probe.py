@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 import fcntl, ctypes, os, sys
 I2C_RDWR=0x0707; I2C_M_RD=1
 class msg(ctypes.Structure): _fields_=[("addr",ctypes.c_uint16),("flags",ctypes.c_uint16),("len",ctypes.c_uint16),("buf",ctypes.POINTER(ctypes.c_uint8))]

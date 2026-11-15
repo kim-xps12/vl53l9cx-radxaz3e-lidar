@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 jonferran
+# From https://github.com/jonferran/vl53l9cx-pi-lidar (commit 36237d0), see upstream/LICENSE.
+# Unmodified apart from this header.
 """
 Radial-to-perpendicular (r2p) + point-cloud calibration for the VL53L9CX.
 

@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: MIT
 # Copy this project from the Mac to the Radxa (~/vl53l9cx). Radxa has no rsync.
 #   scripts/deploy.sh [ssh-host]      default host: radxa-zero3e
 set -euo pipefail

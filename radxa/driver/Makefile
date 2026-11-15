@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 obj-m := vl53l9cx_stub.o
 KVER  ?= $(shell uname -r)
 KDIR  ?= /lib/modules/$(KVER)/build

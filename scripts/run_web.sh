@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: MIT
 # VL53L9CX -> LiDAR Web Studio on the Radxa ZERO 3E (no sudo needed: the user
 # must be in the i2c and video groups).
 #

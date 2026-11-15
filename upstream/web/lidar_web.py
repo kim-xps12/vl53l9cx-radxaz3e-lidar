@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 jonferran
+# From https://github.com/jonferran/vl53l9cx-pi-lidar (commit 36237d0), see upstream/LICENSE.
+# Modified for the Radxa ZERO 3E port: changes are marked "Radxa port"; full diff in git history.
 """
 LiDAR Web Studio -- a networked dashboard for the VL53L9CX ToF LiDAR.
 

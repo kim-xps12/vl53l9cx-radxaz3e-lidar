@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 # Power the board off when the web viewer asks for it.
 # vl53l9cx-web.service (user radxa) creates /run/vl53l9cx/poweroff when the
 # "Shut down" button is clicked twice; this root unit does the rest, so the

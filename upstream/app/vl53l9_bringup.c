@@ -1,3 +1,8 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 jonferran
+// From https://github.com/jonferran/vl53l9cx-pi-lidar (commit 36237d0), see upstream/LICENSE.
+// Modified for the Radxa ZERO 3E port: the I2C bus is selectable (VL_I2C_DEV),
+// marked "Radxa port"; full diff in git history.
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>

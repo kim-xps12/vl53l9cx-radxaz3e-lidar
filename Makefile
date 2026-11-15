@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 # VL53L9CX on Radxa ZERO 3E — build everything on the board itself.
 APP     := build/vl53l9_bringup
 VENDOR  := upstream/vendor/st-uld

@@ -11,7 +11,9 @@ ST の dToF センサー VL53L9CX（54 × 42 区画）を Radxa ZERO 3E（RK3566
 ## 使い方
 
 電源を入れると約 20 秒で自動的に受信と Web 表示が始まる（systemd のサービス `vl53l9cx-web`）。
-ブラウザで `http://192.168.0.22:8080` を開く。
+ブラウザで `http://<Radxa の IP アドレス>:8080` を開く（mDNS が使えれば `http://radxa-zero3.local:8080`）。
+3D 点群（ドラッグで回転、ホイールで拡大）、距離の色分け画像、PLY 形式の点群の保存、記録と再生ができる。
+ログは `/tmp/vl53l9cx/{web,v4l2,bringup}.log`。
 
 ```bash
 sudo systemctl stop vl53l9cx-web       # 止める（XSHUT が Low になり、センサーとレーザーも止まる）
@@ -34,8 +36,6 @@ Radxa がシャットダウンする（センサーの停止 → OS の終了）
   このヘッダを付けた要求をブラウザが送らせないので、閲覧中の他のサイト経由で勝手に落とされることはない。
   ただし同じ LAN の誰でもこの画面を開けば落とせる。
 - 無効にするには `sudo systemctl disable --now vl53l9cx-poweroff.path`。
-3D 点群（ドラッグで回転、ホイールで拡大）、距離の色分け画像、
-PLY 形式の点群の保存、記録と再生ができる。ログは `/tmp/vl53l9cx/{web,v4l2,bringup}.log`。
 
 ## 仕組み
 
@@ -83,7 +83,8 @@ build/vl53l9_bringup（I²C でファームウェア読込 → 測距設定 → 
 
 ```bash
 # Mac から転送（Radxa に rsync が無いので tar で送る）
-scripts/deploy.sh                    # 名前が引けないとき: SSH="ssh -o HostName=192.168.0.22 -o HostKeyAlias=radxa-zero3.local" scripts/deploy.sh
+scripts/deploy.sh                    # git で管理しているファイルだけを送る。既定の宛先は ssh の別名 radxa-zero3e
+                                     # 名前が引けないとき: SSH="ssh -o HostName=<IP> -o HostKeyAlias=radxa-zero3.local" scripts/deploy.sh
 
 # Radxa 上
 cd ~/vl53l9cx
@@ -133,7 +134,7 @@ sudo reboot
 | `scripts/deploy.sh` | Mac から Radxa の `~/vl53l9cx` へ転送 |
 | `tools/i2c_probe.py` | I²C2 の応答アドレスとセンサーの型番・状態の読み出し（受信中に使う） |
 | `docs/README.md` | 参考資料（STEVAL 回路図、UM3655、Radxa 回路図）の入手先と、設計に使った事実。PDF は著作物なので git に入れていない |
-| `upstream/` | 参照元から取り込んだ部分（MIT。`vendor/st-uld` は ST の SLA0111） |
+| `upstream/` | jonferran/vl53l9cx-pi-lidar から取り込んだ部分（下の「クレジットとライセンス」を参照） |
 
 参照元からの変更点：
 
@@ -144,3 +145,30 @@ sudo reboot
   - 画面右上のシャットダウンボタンと `POST /poweroff` を追加した。
   - OpenCV のスレッドを 1 本にし、受信用の名前付きパイプを 64 KB から 1 MB に広げた（`VL_PIPE_SZ=0` で元のまま）。直す前は、ブラウザが接続していると
     処理が 47 fps に落ち、パイプが詰まって受信側が毎秒約 50 フレームを取りこぼしていた。
+
+## クレジットとライセンス
+
+| 場所 | 作者 | ライセンス |
+|---|---|---|
+| `upstream/app`、`upstream/web` | jonferran（[jonferran/vl53l9cx-pi-lidar](https://github.com/jonferran/vl53l9cx-pi-lidar)、commit 36237d0）。`vl53l9_bringup.c` と `lidar_web.py` はこのリポジトリで改変（変更箇所に `Radxa port` の注記、差分は git の履歴） | MIT、Copyright (c) 2026 jonferran（`upstream/LICENSE`） |
+| `upstream/vendor/st-uld` | STMicroelectronics（jonferran が待ち時間を変更） | SLA0111（`upstream/vendor/st-uld/LICENSE.txt`）。オープンソースのライセンスではなく、このリポジトリの MIT の対象外。ST のセンサーと組み合わせてのみ使える |
+| `radxa/driver` | このリポジトリ | GPL-2.0（Linux カーネルモジュール） |
+| `radxa/dts` | このリポジトリ | GPL-2.0+ または MIT |
+| 上記以外 | このリポジトリ | MIT（`LICENSE`） |
+
+- 起動プログラム、Web 表示（LiDAR Web Studio）、校正とジェスチャー認識のコードは jonferran の作。このリポジトリで新しく書いたのは、
+  Radxa で受信する部分（`radxa/`）、導入・起動のスクリプト、文書と、上記 2 ファイルへの変更。
+- XSHUT と 12 MHz クロックの扱いは [adityakamath/vl53l9cx-pi-lidar](https://github.com/adityakamath/vl53l9cx-pi-lidar) の記述を参考にした（コードは使っていない）。
+- STMicroelectronics とは無関係で、同社の承認も受けていない。VL53L9CX と STEVAL は ST の商標。
+
+### Credits and license (English)
+
+This repository ports [jonferran/vl53l9cx-pi-lidar](https://github.com/jonferran/vl53l9cx-pi-lidar)
+(MIT, Copyright (c) 2026 jonferran) to the Radxa ZERO 3E (RK3566). The bring-up app, the LiDAR Web Studio and
+the calibration and gesture code under `upstream/` are jonferran's work; `vl53l9_bringup.c` and `lidar_web.py`
+were modified here (changes marked "Radxa port", full diff in the git history). `upstream/vendor/st-uld` is
+STMicroelectronics' ULD under SLA0111, which is not an open-source license and is not covered by this
+repository's MIT license. New in this repository: the Radxa capture path (`radxa/`, the kernel driver is
+GPL-2.0), the install and run scripts, and the documentation (MIT). The XSHUT and 12 MHz clock handling follows
+the notes of [adityakamath/vl53l9cx-pi-lidar](https://github.com/adityakamath/vl53l9cx-pi-lidar) (no code taken).
+Not affiliated with or endorsed by STMicroelectronics; VL53L9CX and STEVAL are ST trademarks.
