@@ -18,7 +18,7 @@ __pycache__/
 # recordings made from the web UI
 upstream/web/recordings/
 
-# ST documents: copyrighted, download them yourself (see docs/README.md)
+# ST documents: copyrighted, download them yourself (see README, 参考資料)
 docs/*.pdf
 
 .DS_Store

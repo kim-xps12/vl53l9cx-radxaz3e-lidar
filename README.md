@@ -121,6 +121,21 @@ sudo reboot
   直交座標に変換している。
 - 54 × 42（binning 2）のみ対応。binning 4（24 × 24）は 1 フレーム 39 行で、rkcif の最小の高さ 64 行を下回る。
 
+## 参考資料
+
+| 資料 | 使った内容 | 入手先 |
+|---|---|---|
+| STEVAL-VL53L9 回路図（Rev 1） | FFC（J1）の配列（2/6）、発振器と EEPROM（5/6） | https://www.st.com/resource/en/schematic_pack/steval-vl53l9-schematic.pdf |
+| UM3655 | 部品表（R25、JP3）、FFC の向き | https://www.st.com/resource/en/user_manual/um3655-getting-started-with-the-stevalvl53l9-board-based-on-the-vl53l9cx-for-stm32-nucleo-n657x0-and-n6570dk-stmicroelectronics.pdf |
+| Radxa ZERO 3E 回路図 V1.2 | カメラ端子 J7 の配列、VCCIO6 = 3.3 V | https://dl.radxa.com/zero3/docs/hw/3e/radxa_zero_3e_v1200_schematic.pdf |
+
+ST の資料は著作物なので git には入れていない（手元では `docs/` に置き、`.gitignore` で除外）。資料から確認した事実：
+
+- STEVAL の FFC（J1）と Radxa の J7 は 1〜22 番まで同じ並び。17 = XSHUT、18 = AP_CLK、20/21 = I²C、22 = 3.3 V（STEVAL 回路図 2/6）。
+- 基板の 12 MHz 発振器は R25 実装で無効。ホストから AP_CLK に 12 MHz を入れる（STEVAL 回路図 5/6、UM3655 部品表）。
+- JP3[1-2] 実装 = ホスト側 I/O 3.3 V（UM3655 部品表）。
+- EEPROM M24C64 が 0x55（識別ページ 0x5d）で、センサーと同じ 1.8 V 側の I²C にある（STEVAL 回路図 5/6）。
+
 ## ファイル
 
 | パス | 内容 |
@@ -133,7 +148,6 @@ sudo reboot
 | `scripts/vl53l9cx-poweroff.path` / `.service` | Web 画面のシャットダウン要求を受けて電源を切る root 側のユニット |
 | `scripts/deploy.sh` | Mac から Radxa の `~/vl53l9cx` へ転送 |
 | `tools/i2c_probe.py` | I²C2 の応答アドレスとセンサーの型番・状態の読み出し（受信中に使う） |
-| `docs/README.md` | 参考資料（STEVAL 回路図、UM3655、Radxa 回路図）の入手先と、設計に使った事実。PDF は著作物なので git に入れていない |
 | `upstream/` | jonferran/vl53l9cx-pi-lidar から取り込んだ部分（下の「クレジットとライセンス」を参照） |
 | `LICENSE` / `LICENSES.md` | このリポジトリの MIT ライセンスと、その対象外の部分の一覧 |
 
