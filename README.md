@@ -8,6 +8,11 @@ ST の dToF センサー VL53L9CX（54 × 42 区画）を Radxa ZERO 3E（RK3566
 取り込み、Raspberry Pi 専用だった受信部分を RK3566 用に作り直した。XSHUT と 12 MHz クロックの扱いは
 [adityakamath/vl53l9cx-pi-lidar](https://github.com/adityakamath/vl53l9cx-pi-lidar)（Raspberry Pi 5 版）を参考にした。
 
+![ブラウザの画面：左に 3D 点群、右に距離の色分け画像と統計](docs/pic/overview_gui.png)
+
+ブラウザの画面。左はセンサーの前に手をかざしたときの 3D 点群、右は距離の色分け画像（物体検出を有効にした状態）と
+統計（最も近い点 405 mm、平均 973 mm、有効区画 2268）。
+
 ## 使い方
 
 電源を入れると約 20 秒で自動的に受信と Web 表示が始まる（systemd のサービス `vl53l9cx-web`）。
@@ -70,6 +75,11 @@ build/vl53l9_bringup（I²C でファームウェア読込 → 測距設定 → 
 | XSHUT ジャンパーは不要 | STEVAL 側で XSHUT はプルアップ済み。Radxa が FFC 17 番から操作する | ジャンパーを外しても線が High のまま |
 
 ## 配線
+
+![Radxa ZERO 3E と STEVAL-VL53L9 を付属の FFC でつないだ様子](docs/pic/overview_connection.JPG)
+
+左が Radxa ZERO 3E（有線 LAN と USB-C の給電をつないだ状態）、右が STEVAL-VL53L9（紫の台に載せている）。
+両者を STEVAL 付属の FFC でつなぐ。STEVAL の J2 にジャンパーは付けていない。
 
 - STEVAL 付属の 22 ピン FFC を STEVAL の J1 と Radxa ZERO 3E のカメラ端子 J7 へ。端子配列は 1〜22 番まで一致
   （両方とも Raspberry Pi Zero の 22 ピンカメラ端子と同じ並び）。
@@ -149,6 +159,7 @@ ST の資料は著作物なので git には入れていない（手元では `d
 | `scripts/deploy.sh` | Mac から Radxa の `~/vl53l9cx` へ転送 |
 | `tools/i2c_probe.py` | I²C2 の応答アドレスとセンサーの型番・状態の読み出し（受信中に使う） |
 | `upstream/` | jonferran/vl53l9cx-pi-lidar から取り込んだ部分（下の「クレジットとライセンス」を参照） |
+| `docs/pic/` | README の写真（画面、接続）。接続写真は位置情報などのメタデータを消して縮小したもの |
 | `LICENSE` / `LICENSES.md` | このリポジトリの MIT ライセンスと、その対象外の部分の一覧 |
 
 参照元からの変更点：

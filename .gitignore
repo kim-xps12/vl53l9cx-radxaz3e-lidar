@@ -20,5 +20,7 @@ upstream/web/recordings/
 
 # ST documents: copyrighted, download them yourself (see README, 参考資料)
 docs/*.pdf
+# original photos with camera metadata (GPS etc.); the published copies in docs/pic are stripped
+docs/pic/original/
 
 .DS_Store

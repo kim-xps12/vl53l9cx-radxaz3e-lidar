@@ -7,6 +7,7 @@ HOST=${1:-radxa-zero3e}
 SSH=${SSH:-ssh}   # e.g. SSH="ssh -F my.conf"
 cd "$(dirname "$0")/.."
 # only files tracked by git (their working-tree content, uncommitted edits included):
-# no build outputs, no .git, no ST PDFs, no private notes lying in the folder
-git ls-files -z | COPYFILE_DISABLE=1 tar --null -T - -czf - | $SSH "$HOST" 'mkdir -p ~/vl53l9cx && tar -xzf - -C ~/vl53l9cx 2>&1 | grep -v "unknown extended header" || true'
+# no build outputs, no .git, no ST PDFs, no private notes lying in the folder,
+# and no docs/ (README photos are not needed on the board)
+git ls-files -z -- . ':!docs' | COPYFILE_DISABLE=1 tar --null -T - -czf - | $SSH "$HOST" 'mkdir -p ~/vl53l9cx && tar -xzf - -C ~/vl53l9cx 2>&1 | grep -v "unknown extended header" || true'
 echo "copied to $HOST:~/vl53l9cx"
