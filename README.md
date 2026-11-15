@@ -26,6 +26,7 @@ journalctl -u vl53l9cx-web             # 起動時の出力
 
 画面右上の「⏻ Shut down」を押し、表示が「Click again to power off」に変わってから 5 秒以内にもう一度押す。
 Radxa がシャットダウンする（センサーの停止 → OS の終了）。再び起動するには USB-C の電源を抜き差しする。
+実測（2026-11-15）では、要求から OS の記録が止まるまで約 2.2 秒だった。画面は 10 秒の待ち時間を表示する。
 
 - Web サーバ（ユーザ radxa で動作、認証なし）は root 権限を持たない。ボタンの要求を受けると `/run/vl53l9cx/poweroff` を
   作るだけで、root で動く systemd の監視ユニット `vl53l9cx-poweroff.path` がそれを見つけて `systemctl poweroff` を実行する。

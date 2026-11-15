@@ -771,7 +771,7 @@ _PAGE = r"""<!doctype html>
   <button class="off" id="offbtn" title="Power off the Radxa (click twice)">&#x23FB; Shut down</button>
 </header>
 <div id="offmsg"><div><b>Shutting down&hellip;</b><br>The sensor and the board are stopping.<br>
-Unplug the power once the board's LED has stopped blinking (about <span id="offsec">20</span> s).</div></div>
+The OS stops about 2 s after the request (measured). Unplug the power in <span id="offsec">10</span> s.</div></div>
 <div class="wrap">
   <div class="card">
     <h2>3D point cloud &mdash; drag to orbit, scroll to zoom</h2>
@@ -969,7 +969,7 @@ async function act(cmd,extra){const r=await fetch('/action?cmd='+cmd+(extra||'')
       if(!d.ok){btn.disabled=false;disarm();btn.title=d.error||'failed';btn.textContent='Shutdown failed: '+(d.error||r.status);return;}
     }catch(e){btn.disabled=false;disarm();btn.textContent='Shutdown failed';return;}
     const m=document.getElementById('offmsg'); m.style.display='flex';
-    let t=20; const el=document.getElementById('offsec');
+    let t=10; const el=document.getElementById('offsec');
     const iv=setInterval(()=>{t--; el.textContent=Math.max(t,0); if(t<=0)clearInterval(iv);},1000);
   };
 })();
