@@ -1,0 +1,24 @@
+# build outputs (made on the Radxa with `make all`)
+build/
+*.o
+*.ko
+*.mod
+*.mod.c
+*.cmd
+.*.cmd
+Module.symvers
+modules.order
+.tmp_versions/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# recordings made from the web UI
+upstream/web/recordings/
+
+# ST documents: copyrighted, download them yourself (see docs/README.md)
+docs/*.pdf
+
+.DS_Store
