@@ -1,4 +1,4 @@
-# VL53L9CX（STEVAL-VL53L9）を Radxa ZERO 3E で動かし、点群をブラウザで見る
+# VL53L9CX LiDAR on Radxa ZERO 3E
 
 ST の dToF センサー VL53L9CX（54 × 42 区画）を Radxa ZERO 3E（RK3566）のカメラ端子に付属の FFC でつなぎ、
 距離データを MIPI CSI-2 で受け取ってブラウザに 3D 点群として表示する環境。
@@ -135,6 +135,7 @@ sudo reboot
 | `tools/i2c_probe.py` | I²C2 の応答アドレスとセンサーの型番・状態の読み出し（受信中に使う） |
 | `docs/README.md` | 参考資料（STEVAL 回路図、UM3655、Radxa 回路図）の入手先と、設計に使った事実。PDF は著作物なので git に入れていない |
 | `upstream/` | jonferran/vl53l9cx-pi-lidar から取り込んだ部分（下の「クレジットとライセンス」を参照） |
+| `LICENSE` / `LICENSES.md` | このリポジトリの MIT ライセンスと、その対象外の部分の一覧 |
 
 参照元からの変更点：
 
@@ -154,7 +155,7 @@ sudo reboot
 | `upstream/vendor/st-uld` | STMicroelectronics（jonferran が待ち時間を変更） | SLA0111（`upstream/vendor/st-uld/LICENSE.txt`）。オープンソースのライセンスではなく、このリポジトリの MIT の対象外。ST のセンサーと組み合わせてのみ使える |
 | `radxa/driver` | このリポジトリ | GPL-2.0（Linux カーネルモジュール） |
 | `radxa/dts` | このリポジトリ | GPL-2.0+ または MIT |
-| 上記以外 | このリポジトリ | MIT（`LICENSE`） |
+| 上記以外 | このリポジトリ | MIT（`LICENSE`）。対象外の部分の一覧は `LICENSES.md` |
 
 - 起動プログラム、Web 表示（LiDAR Web Studio）、校正とジェスチャー認識のコードは jonferran の作。このリポジトリで新しく書いたのは、
   Radxa で受信する部分（`radxa/`）、導入・起動のスクリプト、文書と、上記 2 ファイルへの変更。
