@@ -1,0 +1,7 @@
+[Unit]
+Description=Power off requested from the VL53L9CX web viewer
+
+[Service]
+Type=oneshot
+ExecStart=/bin/rm -f /run/vl53l9cx/poweroff
+ExecStart=/usr/bin/systemctl --no-block poweroff

@@ -1,0 +1,177 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+/*
+ * Radxa ZERO 3W/3E: ST VL53L9CX (STEVAL-VL53L9) on the 22-pin camera connector.
+ *
+ *   control : I2C2 (pins M1, the camera-connector I2C) -> /dev/i2c-2, address 0x29
+ *   data    : MIPI CSI-2, 1 data lane, RAW8 (data type 0x2A), 1 Gbit/s
+ *             stub sensor -> csi2_dphy0 -> mipi_csi2 -> rkcif_mipi_lvds (VICAP)
+ *
+ * 22-pin FFC (Raspberry Pi Zero order; Radxa J7 = STEVAL flex):
+ *   17 XSHUT  <- GPIO3_C6 (CAMERAB_PDN_L), driven by the stub driver: low
+ *                while not streaming, low->high at every stream start.
+ *                The sensor only came up when XSHUT was released while the
+ *                capture path (VI power domain, D-PHY) was powered; FFC pin 11
+ *                (SYNC_IN) lands on D-PHY lane 2 of the RK3566.
+ *                The STEVAL J2 jumper XSHUT(5)-3V3(8) MUST BE REMOVED: with it
+ *                fitted, driving the GPIO low shorts 3V3. (The STEVAL already
+ *                pulls XSHUT up, so the jumper is not needed.)
+ *   18 AP_CLK <- GPIO4_C0 as CIF_CLKOUT, 12 MHz (clk_cif_out = 24 MHz / 2)
+ *   20 SCL / 21 SDA <- I2C2-M1 (STEVAL EEPROM at 0x55/0x5d, sensor at 0x29)
+ *   22 3V3
+ *
+ * The sensor node is a stub (radxa/driver/vl53l9cx_stub.c) that also starts
+ * the 12 MHz reference clock; the real sensor is booted from user space over I2C.
+ */
+/dts-v1/;
+/plugin/;
+
+/ {
+	metadata {
+		title = "Enable ST VL53L9CX dToF sensor (MIPI CSI-2 raw capture)";
+		compatible = "radxa,zero3";
+		category = "camera";
+		exclusive = "csi2_dphy0", "i2c2";
+		description = "VL53L9CX on the camera connector: I2C2-M1 control, 1-lane CSI-2 into rkcif.";
+	};
+
+	fragment@0 {
+		target-path = "/";
+		__overlay__ {
+			vl53l9cx_stub: vl53l9cx-csi2-stub {
+				compatible = "st,vl53l9cx-csi2-stub";
+				status = "okay";
+				pinctrl-names = "default";
+				pinctrl-0 = <&cif_clk>;
+				clocks = <&cru 214>;	/* CLK_CIF_OUT */
+				clock-names = "xvclk";
+				clock-frequency = <12000000>;
+				xshut-gpios = <&gpio3 22 0>;	/* GPIO3_C6, active high */
+
+				port {
+					vl53l9cx_out: endpoint {
+						remote-endpoint = <&dphy0_in_vl53l9cx>;
+						data-lanes = <1>;
+						link-frequencies = /bits/ 64 <500000000>;
+					};
+				};
+			};
+		};
+	};
+
+	fragment@1 {
+		target = <&i2c2>;
+		__overlay__ {
+			status = "okay";
+			pinctrl-names = "default";
+			pinctrl-0 = <&i2c2m1_xfer>;
+			/* 100 kHz: the sensor sits behind a level translator on the STEVAL */
+			clock-frequency = <100000>;
+		};
+	};
+
+	fragment@2 {
+		target = <&csi2_dphy_hw>;
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@3 {
+		target = <&csi2_dphy0>;
+		__overlay__ {
+			status = "okay";
+
+			ports {
+				#address-cells = <1>;
+				#size-cells = <0>;
+
+				port@0 {
+					reg = <0>;
+					#address-cells = <1>;
+					#size-cells = <0>;
+
+					dphy0_in_vl53l9cx: endpoint@1 {
+						reg = <1>;
+						remote-endpoint = <&vl53l9cx_out>;
+						data-lanes = <1>;
+					};
+				};
+
+				port@1 {
+					reg = <1>;
+					#address-cells = <1>;
+					#size-cells = <0>;
+
+					dphy0_out_csi2: endpoint@0 {
+						reg = <0>;
+						remote-endpoint = <&csi2_in_dphy0>;
+					};
+				};
+			};
+		};
+	};
+
+	fragment@4 {
+		target = <&mipi_csi2>;
+		__overlay__ {
+			status = "okay";
+
+			ports {
+				#address-cells = <1>;
+				#size-cells = <0>;
+
+				port@0 {
+					reg = <0>;
+					#address-cells = <1>;
+					#size-cells = <0>;
+
+					csi2_in_dphy0: endpoint@1 {
+						reg = <1>;
+						remote-endpoint = <&dphy0_out_csi2>;
+						data-lanes = <1>;
+					};
+				};
+
+				port@1 {
+					reg = <1>;
+					#address-cells = <1>;
+					#size-cells = <0>;
+
+					csi2_out_cif: endpoint@0 {
+						reg = <0>;
+						remote-endpoint = <&cif_in_csi2>;
+						data-lanes = <1>;
+					};
+				};
+			};
+		};
+	};
+
+	fragment@5 {
+		target = <&rkcif_mipi_lvds>;
+		__overlay__ {
+			status = "okay";
+
+			port {
+				cif_in_csi2: endpoint {
+					remote-endpoint = <&csi2_out_cif>;
+					data-lanes = <1>;
+				};
+			};
+		};
+	};
+
+	fragment@6 {
+		target = <&rkcif>;
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@7 {
+		target = <&rkcif_mmu>;
+		__overlay__ {
+			status = "okay";
+		};
+	};
+};

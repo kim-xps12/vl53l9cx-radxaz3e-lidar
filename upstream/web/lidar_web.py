@@ -36,6 +36,8 @@ from urllib.parse import urlparse, parse_qs
 
 import numpy as np
 import cv2
+# Radxa port: the frames are 54 x 42; OpenCV's worker threads only add load.
+cv2.setNumThreads(int(os.environ.get("VL_CV_THREADS", "1")))
 
 from lidar_gestures import GestureEngine
 import lidar_calib
@@ -44,16 +46,26 @@ import lidar_calib
 BINNING = int(os.environ.get("VL_BINNING", "2"))
 GEOM = {2: (54, 42, 148), 4: (24, 24, 38)}
 RAW_W, RAW_H, CSI_H = GEOM[BINNING]
+# Radxa port: the Rockchip VICAP (rkcif) stores each 100-byte line with a
+# 256-byte stride and also keeps the trailing status line, so the line count
+# and stride come from the launcher (VL_CSI_H, VL_STRIDE = v4l2 bytesperline).
+CSI_H = int(os.environ.get("VL_CSI_H", str(CSI_H)))
 N_ZONES = RAW_W * RAW_H
 CH_LEN = N_ZONES * 2
 CSI_W = 100
-STRIDE = 128
-FRAME_BYTES = STRIDE * CSI_H
+STRIDE = int(os.environ.get("VL_STRIDE", "128"))
+# One V4L2 buffer as written by `v4l2-ctl --stream-to` (bytesused); may be
+# larger than STRIDE * CSI_H if the driver pads the image.
+FRAME_BYTES = int(os.environ.get("VL_FRAME_BYTES", str(STRIDE * CSI_H)))
 DIST_MASK = 0x7FFF
 PIPE = os.environ.get("VL_PIPE", "/tmp/tof_pipe_web")
 MAX_MM = 4000
 PORT = int(os.environ.get("VL_PORT", "8080"))
 REC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "recordings")
+# Radxa port: shutdown from the web UI. This server never runs anything as
+# root; it only creates this file, and a root systemd path unit
+# (vl53l9cx-poweroff.path) powers the board off when the file appears.
+POWEROFF_FILE = os.environ.get("VL_POWEROFF_FILE", "/run/vl53l9cx/poweroff")
 ORIENT = 3
 
 
@@ -402,6 +414,14 @@ def sensor_thread():
         return
     nready = array.array("i", [0])
     fd = fifo.fileno()
+    # Radxa port: a 1 MiB pipe (default 64 KiB = 1.7 frames) so v4l2-ctl never
+    # blocks, and the capture never drops buffers, while this reader is busy.
+    pipe_sz = int(os.environ.get("VL_PIPE_SZ", str(1 << 20)))   # 0 = leave as is
+    if pipe_sz:
+        try:
+            fcntl.fcntl(fd, 1031, pipe_sz)   # F_SETPIPE_SZ
+        except OSError as e:
+            print(f"[web] F_SETPIPE_SZ failed: {e}", flush=True)
     print(f"[web] reading {PIPE}  {RAW_W}x{RAW_H} zones", flush=True)
 
     while STUDIO.running:
@@ -423,7 +443,7 @@ def sensor_thread():
             raw = nxt
             nready[0] -= FRAME_BYTES
 
-        full = np.frombuffer(raw, np.uint8).reshape((CSI_H, STRIDE))
+        full = np.frombuffer(raw, np.uint8)[:STRIDE * CSI_H].reshape((CSI_H, STRIDE))
         linear = full[:, :CSI_W].reshape(-1)
         if linear.size < CH_LEN:
             continue
@@ -613,6 +633,30 @@ class Handler(http.server.BaseHTTPRequestHandler):
         except (BrokenPipeError, ConnectionResetError):
             pass
 
+    def do_POST(self):
+        """POST /poweroff with header X-VL53L9CX: poweroff. A custom header
+        cannot be sent cross-site without a CORS preflight (which this server
+        never grants), so other web pages cannot trigger it."""
+        u = urlparse(self.path)
+        if u.path != "/poweroff":
+            self._send(404, "text/plain", b"not found")
+            return
+        if self.headers.get("X-VL53L9CX", "") != "poweroff":
+            self._send(403, "application/json", b'{"ok": false, "error": "missing header"}')
+            return
+        d = os.path.dirname(POWEROFF_FILE)
+        if not os.path.isdir(d):
+            msg = {"ok": False, "error": "shutdown works only when started by vl53l9cx-web.service"}
+        else:
+            try:
+                with open(POWEROFF_FILE, "w") as f:
+                    f.write(f"{time.time():.0f} {self.client_address[0]}\n")
+                print(f"[web] poweroff requested by {self.client_address[0]}", flush=True)
+                msg = {"ok": True}
+            except OSError as e:
+                msg = {"ok": False, "error": str(e)}
+        self._send(200, "application/json", json.dumps(msg).encode())
+
     def _action(self, q):
         cmd = q.get("cmd", [""])[0]
         msg = {"ok": True}
@@ -709,6 +753,9 @@ _PAGE = r"""<!doctype html>
   button.rec{border-color:var(--hot);color:var(--hot)}
   button.rec.active{background:var(--hot);color:#1a0a04}
   a.btn{text-decoration:none;display:inline-block}
+  button.off{padding:5px 11px;font-size:12px;border-color:var(--hot);color:var(--hot)}
+  button.off.arm{background:var(--hot);color:#1a0a04}
+  #offmsg{display:none;position:fixed;inset:0;background:rgba(5,8,13,.92);z-index:9;align-items:center;justify-content:center;text-align:center;font-size:16px;line-height:1.7;padding:24px}
   select{background:#182231;color:var(--tx);border:1px solid var(--ln);border-radius:7px;padding:8px}
   .hint{color:var(--dim);font-size:11px;margin-top:8px}
   .bar{height:6px;border-radius:3px;background:#0d131c;overflow:hidden;margin-top:6px}
@@ -721,7 +768,10 @@ _PAGE = r"""<!doctype html>
   <span style="color:var(--dim);font-size:12px" id="mode">live</span>
   <span style="flex:1"></span>
   <span style="color:var(--dim);font-size:12px" id="fps">-- fps</span>
+  <button class="off" id="offbtn" title="Power off the Radxa (click twice)">&#x23FB; Shut down</button>
 </header>
+<div id="offmsg"><div><b>Shutting down&hellip;</b><br>The sensor and the board are stopping.<br>
+Unplug the power once the board's LED has stopped blinking (about <span id="offsec">20</span> s).</div></div>
 <div class="wrap">
   <div class="card">
     <h2>3D point cloud &mdash; drag to orbit, scroll to zoom</h2>
@@ -906,6 +956,23 @@ function drawPos(g){
 
 // ---------- record / replay ----------
 async function act(cmd,extra){const r=await fetch('/action?cmd='+cmd+(extra||''));return r.json();}
+// ---------- shutdown (Radxa port): click, then click again within 5 s ----------
+(function(){
+  const btn=document.getElementById('offbtn'); let armT=null;
+  function disarm(){btn.classList.remove('arm');btn.innerHTML='&#x23FB; Shut down';armT=null;}
+  btn.onclick=async()=>{
+    if(!armT){btn.classList.add('arm');btn.textContent='Click again to power off';armT=setTimeout(disarm,5000);return;}
+    clearTimeout(armT); btn.disabled=true; btn.textContent='Shutting down…';
+    try{
+      const r=await fetch('/poweroff',{method:'POST',headers:{'X-VL53L9CX':'poweroff'}});
+      const d=await r.json();
+      if(!d.ok){btn.disabled=false;disarm();btn.title=d.error||'failed';btn.textContent='Shutdown failed: '+(d.error||r.status);return;}
+    }catch(e){btn.disabled=false;disarm();btn.textContent='Shutdown failed';return;}
+    const m=document.getElementById('offmsg'); m.style.display='flex';
+    let t=20; const el=document.getElementById('offsec');
+    const iv=setInterval(()=>{t--; el.textContent=Math.max(t,0); if(t<=0)clearInterval(iv);},1000);
+  };
+})();
 async function toggleRec(){
   const b=document.getElementById('recbtn');
   if(!recording){await act('rec_start');recording=true;b.classList.add('active');b.textContent='■ Stop';}

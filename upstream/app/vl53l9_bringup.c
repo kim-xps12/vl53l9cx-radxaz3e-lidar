@@ -49,9 +49,12 @@ int main(int argc, char **argv) {
     printf(" STMicroelectronics VL53L9CX MIPI CSI-2 Transmitter Boot \n");
     printf("=========================================================\n\n");
 
-    printf("[STEP 1/5] Connecting to camera control interface (/dev/i2c-10)...\n");
-    int fd = open("/dev/i2c-10", O_RDWR);
-    if (fd < 0) { perror("[-] Unable to open /dev/i2c-10."); return 1; }
+    /* Radxa port: the I2C bus is selectable (Radxa ZERO 3 camera connector = I2C2). */
+    const char *i2c_dev = getenv("VL_I2C_DEV");
+    if (i2c_dev == NULL || i2c_dev[0] == '\0') i2c_dev = "/dev/i2c-2";
+    printf("[STEP 1/5] Connecting to camera control interface (%s)...\n", i2c_dev);
+    int fd = open(i2c_dev, O_RDWR);
+    if (fd < 0) { perror("[-] Unable to open the I2C bus"); return 1; }
     if (ioctl(fd, I2C_SLAVE, 0x29) < 0) { perror("[-] Slave address failed"); close(fd); return 1; }
 
     dev.bus = (void*)(intptr_t)fd;

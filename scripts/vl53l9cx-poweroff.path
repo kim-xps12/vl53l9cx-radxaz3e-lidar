@@ -1,0 +1,13 @@
+# Power the board off when the web viewer asks for it.
+# vl53l9cx-web.service (user radxa) creates /run/vl53l9cx/poweroff when the
+# "Shut down" button is clicked twice; this root unit does the rest, so the
+# web server itself never needs root.
+[Unit]
+Description=Watch for a shutdown request from the VL53L9CX web viewer
+
+[Path]
+PathExists=/run/vl53l9cx/poweroff
+Unit=vl53l9cx-poweroff.service
+
+[Install]
+WantedBy=multi-user.target
